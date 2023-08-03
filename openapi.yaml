@@ -1,0 +1,365 @@
+openapi: 3.0.0
+
+info:
+  description: API for listing campaigns and ads
+  version: 3.1.0
+  title: Fancy API
+
+servers:
+  - url: /
+
+tags:
+  - name: campaigns
+  - name: ads
+  - name: list
+  - name: create
+  - name: update
+  - name: details
+
+paths:
+  /alert/ping:
+    get:
+      operationId: alertPing
+      summary: "Check if app is running"
+      description: "Used for k8s liveness & readiness probes"
+      responses:
+        '200':
+          description: "App is running"
+        '404':
+          description: "App is not running"
+        '500':
+          description: Unexpected error
+  /campaigns:
+    get:
+      summary: Lists all campaigns
+      operationId: getAllCampaigns
+      tags:
+        - campaigns
+        - list
+      responses:
+        "200":
+          description: "List of all Campaigns in PLA"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaigns"
+        "400":
+          description: "Invalid request."
+        "404":
+          description: "No campaigns found."
+        "500":
+          description: Unexpected Error
+      parameters:
+        - $ref: "#/components/parameters/sites"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+        - $ref: "#/components/parameters/campaign_status"
+  /campaigns/{campaign_id}:
+    get:
+      summary: "Get one campaign details"
+      operationId: GetCampaign
+      tags:
+        - campaigns
+        - details
+      responses:
+        "200":
+          description: "Get one campaign details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+        "400":
+          description: "Invalid request."
+        "404":
+           description: "No campaign found."
+        "500":
+          description: Unexpected Error
+      parameters:
+        - $ref: "#/components/parameters/campaign_id"
+    post:
+      summary: "Update campaign budget"
+      operationId: UpdateCampaignBudget
+      tags:
+        - campaigns
+        - update
+      responses:
+        "204":
+          description: "Budget Updated"
+        "404":
+          description: "No Campaign found"
+        "500":
+          description: Unexpected Error
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  $ref: "#/components/schemas/monetary_value"
+      parameters:
+        - $ref: "#/components/parameters/campaign_id"
+  /campaigns/{campaign_id}/ads:
+    get:
+      summary: "Get all ads for campaign"
+      operationId: GetAllAdsForCampaign
+      tags:
+        - list
+        - ads
+      responses:
+        "200":
+          description: "Get all ads for campaign"
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - ads
+                properties:
+                  ads:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Ad"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "No ads found for requested campaign."
+        "500":
+          description: Unexpected Error
+      parameters:
+        - $ref: "#/components/parameters/campaign_id"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+    post:
+      summary: "Add a new Ad to the campaign"
+      operationId: AddAdToCampaign
+      tags:
+        - ads
+        - create
+      responses:
+        "201":
+          description: "Created"
+          headers:
+            Location:
+              required: true
+              schema:
+                type: string
+                format: url
+                example: "/campaigns/123/ads/112233"
+        "404":
+          description: "Campaign not found"
+        "500":
+          description: Unexpected Error
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                listing_id:
+                  $ref: "#/components/schemas/listing_id"
+                bid:
+                  $ref: "#/components/schemas/Bid"
+      parameters:
+        - $ref: "#/components/parameters/campaign_id"
+  /campaigns/{campaign_id}/ads/{ad_id}:
+    get:
+      summary: "Get one Ad details"
+      operationId: GetAd
+      tags:
+        - ads
+        - details
+      responses:
+        "200":
+          description: "Get one Ad details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ad"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "No Ad found"
+        "500":
+          description: Unexpected Error
+      parameters:
+        - $ref: "#/components/parameters/campaign_id"
+        - $ref: "#/components/parameters/ad_id"
+    post:
+      summary: "Update Ad Bid"
+      operationId: UpdateAdBid
+      tags:
+        - ads
+        - update
+      responses:
+        "204":
+          description: "Bid updated"
+        "404":
+          description: "No Campaign or Ad found"
+        "500":
+          description: Unexpected Error
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  $ref: "#/components/schemas/monetary_value"
+      parameters:
+        - $ref: "#/components/parameters/campaign_id"
+        - $ref: "#/components/parameters/ad_id"
+
+components:
+  parameters:
+    campaign_id:
+      name: campaign_id
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/parameters/campaign_id"
+    ad_id:
+      name: ad_id
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/parameters/ad_id"
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        minimum: 1
+        maximum: 500
+        type: number
+    offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: number
+    sites:
+      name: sites
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/site'
+      style: form
+      explode: false
+      example: "?site=UK&site=US&site=DE"
+    campaign_status:
+      name: status
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          $ref: '#'#/components/schemas/CampaignStatus'
+      style: form
+      explode: false
+      example: "?status=SCHEDULED&site=ENDED"
+
+
+  schemas:
+    # Simple properties
+    account_id:
+      type: integer
+    listing_id:
+      type: integer
+    campaign_id:
+      type: integer
+    ad_id:
+      type: integer
+    site:
+      type: string
+      enum:
+        - UK
+        - US
+        - DE
+    currency:
+      type: string
+      enum:
+        - EUR
+        - USD
+        - GBP
+    monetary_value:
+      type: number
+      format: float
+      default: 0.0
+      minimum: 0.0
+    CampaignStatus:
+      type: string
+      enum:
+        - SCHEDULED
+        - PAUSED
+        - RUNNING
+        - ENDED
+
+    # Models
+    Bid:
+      type: object
+      required:
+        - currency
+        - value
+      properties:
+        currency:
+          $ref: "#/components/schemas/currency"
+        value:
+          $ref: "#/components/schemas/monetary_value"
+    Ad:
+      type: object
+      required:
+        - listing_id
+        - bid
+      properties:
+        id:
+          $ref: "#/components/schemas/ad_id"
+        listing_id:
+          $ref: "#/components/schemas/listing_id"
+        bid:
+          $ref: "#/components/schemas/Bid"
+    CampaignBudget:
+      type: object
+      required:
+        - currency
+        - value
+      properties:
+        currency:
+          $ref: "#/components/schemas/currency"
+        value:
+          $ref: "#/components/schemas/monetary_value"
+    Campaign:
+      type: object
+      required:
+        - id
+        - account_id
+        - site
+      properties:
+        id:
+          $ref: "#/components/schemas/account_id"
+        account_id:
+          $ref: "#/components/schemas/account_id"
+        site:
+          $ref: "#/components/schemas/site"
+        budget:
+          $ref: "#/components/schemas/CampaignBudget"
+        status:
+          $ref: "#/components/schemas/CampaignStatus"
+    Campaigns:
+      type: object
+      required:
+        - campaigns
+      properties:
+        campaigns:
+          type: array
+          items:
+            $ref: "#/components/schemas/Campaign"
