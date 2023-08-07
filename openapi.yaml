@@ -68,6 +68,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Campaign"
+          links:
+            ads:
+              description: "All campaign ads"
+              operationRef: GetAllAdsForCampaign
+              parameters:
+                campaign_id: $request.path.campaign_id
         "400":
           description: "Invalid request."
         "404":
@@ -77,6 +83,8 @@ paths:
       parameters:
         - $ref: "#/components/parameters/campaign_id"
     post:
+      # Can be done with put, but then we probably should create another resource for the budget and it should be linked
+      # to the campaign, also the whole budget object should be then passed in the payload.
       summary: "Update campaign budget"
       operationId: UpdateCampaignBudget
       tags:
@@ -190,6 +198,8 @@ paths:
         - $ref: "#/components/parameters/campaign_id"
         - $ref: "#/components/parameters/ad_id"
     post:
+      # Can be done with put, but then we probably should create another resource for the bid and it should be linked
+      # to the ad, also the whole bid object should be then passed in the payload.
       summary: "Update Ad Bid"
       operationId: UpdateAdBid
       tags:
