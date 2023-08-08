@@ -15,6 +15,7 @@ tags:
   - name: create
   - name: update
   - name: details
+  - name: delete
 
 paths:
   /alert/ping:
@@ -82,9 +83,7 @@ paths:
           description: Unexpected Error
       parameters:
         - $ref: "#/components/parameters/campaign_id"
-    post:
-      # Can be done with put, but then we probably should create another resource for the budget and it should be linked
-      # to the campaign, also the whole budget object should be then passed in the payload.
+    put:
       summary: "Update campaign budget"
       operationId: UpdateCampaignBudget
       tags:
@@ -102,14 +101,22 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - value
-              properties:
-                value:
-                  $ref: "#/components/schemas/monetary_value"
+              $ref: "#/components/schemas/Campaign"
       parameters:
         - $ref: "#/components/parameters/campaign_id"
+    delete:
+      summary: "Delete Campaign"
+      operationId: DeleteCampaign
+      tags:
+        - campaigns
+        - delete
+      responses:
+        "204":
+          description: "Campaign deleted"
+        "404":
+          description: "Camapign not found"
+        "500":
+           description: Unexpected Error
   /campaigns/{campaign_id}/ads:
     get:
       summary: "Get all ads for campaign"
@@ -197,9 +204,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/campaign_id"
         - $ref: "#/components/parameters/ad_id"
-    post:
-      # Can be done with put, but then we probably should create another resource for the bid and it should be linked
-      # to the ad, also the whole bid object should be then passed in the payload.
+    put:
       summary: "Update Ad Bid"
       operationId: UpdateAdBid
       tags:
@@ -217,16 +222,23 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - value
-              properties:
-                value:
-                  $ref: "#/components/schemas/monetary_value"
+              $ref: "#/components/schemas/Ad"
       parameters:
         - $ref: "#/components/parameters/campaign_id"
         - $ref: "#/components/parameters/ad_id"
-
+    delete:
+      summary: "Delete Ad"
+      operationId: DeleteAd
+      tags:
+        - ads
+        - delete
+      responses:
+        "204":
+          description: "Ad deleted"
+        "404":
+          description: "Ad or Camapign not found"
+        "500":
+           description: Unexpected Error
 components:
   parameters:
     campaign_id:
@@ -287,7 +299,9 @@ components:
       type: integer
     campaign_id:
       type: integer
+      readOnly: true
     ad_id:
+      readOnly: true
       type: integer
     site:
       type: string
@@ -328,6 +342,7 @@ components:
     Ad:
       type: object
       required:
+        - id
         - listing_id
         - bid
       properties:
@@ -355,7 +370,7 @@ components:
         - site
       properties:
         id:
-          $ref: "#/components/schemas/account_id"
+          $ref: "#/components/schemas/campaign_id"
         account_id:
           $ref: "#/components/schemas/account_id"
         site:
